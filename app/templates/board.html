@@ -1,0 +1,76 @@
+﻿{% extends "base.html" %}
+{% block title %}Онлайн-табло вокзалов — РЖД-Инфо{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-display text-danger me-2"></i>Электронное табло вокзала</h2>
+            <p class="text-muted mb-0">Оперативное табло прибытия и отправления поездов дальнего и пригородного следования</p>
+        </div>
+        <form action="/board" method="GET" class="d-flex align-items-center mt-3 mt-md-0">
+            <label class="form-label fw-semibold me-2 mb-0">Вокзал:</label>
+            <select class="form-select border-danger" name="station_id" onchange="this.form.submit()">
+                {% for st in stations %}
+                    <option value="{{ st.id }}" {% if selected_station and selected_station.id == st.id %}selected{% endif %}>
+                        {{ st.city }} ({{ st.name }})
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold px-4 bg-danger" data-bs-toggle="pill" data-bs-target="#pills-departures">Отправление ({{ departures|length }})</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold px-4 text-dark" data-bs-toggle="pill" data-bs-target="#pills-arrivals">Прибытие ({{ arrivals|length }})</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="pills-departures">
+            <div class="card card-custom bg-white p-3">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>Время</th><th>Поезд</th><th>Куда</th><th>Платформа</th><th>Статус</th><th class="text-end">Инфо</th></tr></thead>
+                    <tbody>
+                        {% for sch in departures %}
+                            <tr>
+                                <td class="fs-5 fw-bold text-danger">{{ sch.departure_time.strftime('%H:%M') }}</td>
+                                <td><span class="badge bg-secondary me-1">{{ sch.train.number }}</span><strong>{{ sch.train.name }}</strong></td>
+                                <td>{{ sch.arrival_station.city }}</td>
+                                <td><span class="badge bg-dark fs-6">{{ sch.platform }}</span></td>
+                                <td><span class="badge bg-success-subtle text-success fs-6">{{ sch.status }}</span></td>
+                                <td class="text-end"><a href="/train/{{ sch.id }}" class="btn btn-sm btn-outline-danger rounded-pill">Маршрут</a></td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Отправлений нет.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="pills-arrivals">
+            <div class="card card-custom bg-white p-3">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>Время</th><th>Поезд</th><th>Откуда</th><th>Платформа</th><th>Статус</th><th class="text-end">Инфо</th></tr></thead>
+                    <tbody>
+                        {% for sch in arrivals %}
+                            <tr>
+                                <td class="fs-5 fw-bold text-success">{{ sch.arrival_time.strftime('%H:%M') }}</td>
+                                <td><span class="badge bg-secondary me-1">{{ sch.train.number }}</span><strong>{{ sch.train.name }}</strong></td>
+                                <td>{{ sch.departure_station.city }}</td>
+                                <td><span class="badge bg-dark fs-6">{{ sch.platform }}</span></td>
+                                <td><span class="badge bg-success-subtle text-success fs-6">{{ sch.status }}</span></td>
+                                <td class="text-end"><a href="/train/{{ sch.id }}" class="btn btn-sm btn-outline-danger rounded-pill">Маршрут</a></td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Прибытий нет.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

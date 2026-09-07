@@ -1,0 +1,235 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}РЖД-Инфо — Информационно-справочная система расписания поездов{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --rzd-red: #e21a1a;
+            --rzd-dark: #1b2430;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #2c3e50;
+        }
+
+        .navbar-rzd {
+            background-color: var(--rzd-dark);
+            border-bottom: 3px solid var(--rzd-red);
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #16294a 0%, #1f4068 50%, #1c3d73 100%);
+            color: white;
+            padding: 55px 0;
+            border-radius: 0 0 28px 28px;
+            margin-bottom: 35px;
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .card-custom:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.09);
+        }
+
+        .pulse-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #28a745;
+            margin-right: 6px;
+            animation: pulse-animation 1.8s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(40, 167, 69, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+
+        .footer-official {
+            margin-top: auto;
+            background-color: var(--rzd-dark);
+            color: #a0aec0;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .footer-official a { color: #cbd5e0; text-decoration: none; }
+        .footer-official a:hover { color: #ffffff; text-decoration: underline; }
+
+        #cookieBanner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            max-width: 580px;
+            z-index: 1050;
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border-left: 5px solid var(--rzd-red);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-rzd sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
+                <i class="bi bi-train-front text-danger fs-3 me-2"></i>
+                <span class="fs-4">РЖД-Инфо</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-search me-1"></i> Поиск поездов</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/board"><i class="bi bi-display me-1"></i> Онлайн-табло вокзалов</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-light small d-none d-xl-inline opacity-75">
+                        <span class="pulse-dot"></span>Сервис онлайн
+                    </span>
+                    <a href="/admin" class="btn btn-danger btn-sm rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-shield-lock me-1"></i> Диспетчерская
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>{% block content %}{% endblock %}</main>
+
+    <footer class="footer-official pt-5 pb-4">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h6 class="text-white fw-bold mb-3 d-flex align-items-center">
+                        <i class="bi bi-train-front text-danger me-2"></i>РЖД-Инфо
+                    </h6>
+                    <p class="small text-secondary mb-3">
+                        Официальная информационно-справочная система мониторинга расписания и маршрутов пассажирских поездов.
+                    </p>
+                    <div class="small text-secondary">
+                        <i class="bi bi-telephone-fill text-danger me-2"></i>Справочная служба: <strong>8 (800) 775-00-00</strong>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Справочные сервисы</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2">
+                        <li><a href="/"><i class="bi bi-chevron-right me-1 text-danger"></i>Поиск расписания</a></li>
+                        <li><a href="/board"><i class="bi bi-chevron-right me-1 text-danger"></i>Электронное табло вокзалов</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-5 col-md-12">
+                    <h6 class="text-white fw-bold mb-3">Правовая информация (152-ФЗ)</h6>
+                    <p class="small text-secondary mb-2">
+                        Обработка данных осуществляется в строгом соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных».
+                    </p>
+                    <ul class="list-inline small mb-0">
+                        <li class="list-inline-item me-3 mb-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Политика конфиденциальности</a>
+                        </li>
+                        <li class="list-inline-item mb-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Пользовательское соглашение</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <hr class="border-secondary my-4 opacity-25">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center small text-secondary">
+                <div>&copy; 2026 Информационно-справочная система «РЖД-Инфо». Все права защищены.</div>
+                <div>ГОСТ Р 52872-2019</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Баннер Cookies -->
+    <div id="cookieBanner" class="p-3">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="small pe-3">
+                <i class="bi bi-shield-check text-success fs-5 me-2 align-middle"></i>
+                Сайт использует файлы cookie и технические метаданные в соответствии с <strong>152-ФЗ</strong>.
+            </div>
+            <button class="btn btn-danger btn-sm px-3 rounded-pill text-nowrap fw-bold" onclick="acceptCookies()">Принять</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно: Политика конфиденциальности -->
+    <div class="modal fade" id="privacyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-shield-lock me-2 text-danger"></i>Политика в отношении обработки персональных данных</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body small text-secondary">
+                    <h6 class="text-dark fw-bold">1. Общие положения</h6>
+                    <p>Настоящая Политика составлена в соответствии с Федеральным законом «О персональных данных» № 152-ФЗ от 27.07.2006 г. и определяет порядок обработки персональных данных и меры по обеспечению безопасности данных информационно-справочной системы «РЖД-Инфо».</p>
+                    <h6 class="text-dark fw-bold">2. Цели обработки данных</h6>
+                    <p>Обработка персональных данных пользователей и диспетчерского персонала осуществляется исключительно в целях предоставления актуальной справочной информации о движении поездов, оформления служебного доступа и обеспечения транспортной безопасности.</p>
+                    <h6 class="text-dark fw-bold">3. Безопасность и защита</h6>
+                    <p>Оператор принимает необходимые правовые, организационные и технические меры для защиты персональных данных от неправомерного или случайного доступа, уничтожения, изменения, блокирования, копирования и распространения.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно: Пользовательское соглашение -->
+    <div class="modal fade" id="termsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-file-text me-2 text-danger"></i>Пользовательское соглашение</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body small text-secondary">
+                    <h6 class="text-dark fw-bold">1. Предмет соглашения</h6>
+                    <p>Информационный ресурс «РЖД-Инфо» предоставляет Пользователю безвозмездный доступ к актуальному расписанию, справочной информации по маршрутам и данным электронного табло вокзалов.</p>
+                    <h6 class="text-dark fw-bold">2. Справочный характер системы</h6>
+                    <p>Система предназначена исключительно для мониторинга движения пассажирских поездов. Резервирование, оформление и оплата проездных документов через данный сервис не производятся.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Понятно</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function acceptCookies() {
+            document.getElementById('cookieBanner').style.display = 'none';
+            localStorage.setItem('cookieAccepted', 'true');
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('cookieAccepted') === 'true') {
+                const b = document.getElementById('cookieBanner');
+                if (b) b.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+﻿{% extends "base.html" %}
+{% block title %}Поезд {{ schedule.train.number }} — Справка о рейсе и схема вагонов{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-danger">Главная</a></li>
+                <li class="breadcrumb-item"><a href="javascript:history.back()" class="text-decoration-none text-danger">Поиск</a></li>
+                <li class="breadcrumb-item active">Рейс {{ schedule.train.number }}</li>
+            </ol>
+        </nav>
+        <a href="/train/{{ schedule.id }}/export-ics" class="btn btn-outline-dark btn-sm rounded-pill mt-3 mt-md-0 shadow-sm">
+            <i class="bi bi-calendar-plus text-danger me-1"></i> Добавить в календарь (.ics)
+        </a>
+    </div>
+
+    <!-- Общая карточка рейса -->
+    <div class="card card-custom p-4 bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-danger mb-2">{{ schedule.train.train_type }}</span>
+                <h2 class="fw-bold mb-1 text-dark">
+                    <i class="bi bi-train-front text-danger me-2"></i>Поезд {{ schedule.train.number }}
+                </h2>
+                <h4 class="text-secondary">{{ schedule.train.name }}</h4>
+                <p class="text-muted mb-0">
+                    Маршрут: <strong>{{ schedule.departure_station.city }} &rarr; {{ schedule.arrival_station.city }}</strong>
+                </p>
+            </div>
+            <div class="text-md-end mt-3 mt-md-0">
+                <div class="text-secondary small">Общее время в пути</div>
+                <div class="fs-4 fw-bold text-dark">{{ duration }}</div>
+                <div class="badge bg-success-subtle text-success fs-6 mt-1">
+                    <i class="bi bi-check-circle me-1"></i>{{ schedule.status }} (Платформа {{ schedule.platform }})
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ИНФОРМАЦИОННЫЕ СХЕМЫ ВАГОНОВ -->
+    <div class="card card-custom p-4 bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="fw-bold mb-1"><i class="bi bi-grid-3x3-gap text-danger me-2"></i>Информационная схема мест в составе</h4>
+                <p class="text-muted small mb-0">Оперативная справка о наличии свободных полок и мест на момент запроса</p>
+            </div>
+            <div class="small d-flex gap-3 mt-2 mt-md-0">
+                <span><span class="badge bg-success me-1">&nbsp;</span> Свободно</span>
+                <span><span class="badge bg-secondary opacity-50 me-1">&nbsp;</span> Занято</span>
+            </div>
+        </div>
+
+        <div class="alert alert-light border small text-muted mb-4 py-2">
+            <i class="bi bi-info-circle me-1 text-primary"></i> <strong>Справка:</strong> Выбор и резервирование мест через данный сервис не осуществляются. Схема приведена исключительно для ознакомления пассажиров с компоновкой состава.
+        </div>
+
+        <!-- Вкладки выбора типа вагона -->
+        <ul class="nav nav-pills mb-4" id="carTab" role="tablist">
+            {% for car in carriages %}
+                <li class="nav-item me-2">
+                    <button class="nav-link {% if loop.first %}active bg-danger text-white{% else %}text-dark bg-light border{% endif %} fw-semibold rounded-pill px-4" 
+                            id="tab-btn-{{ car.id }}" 
+                            data-bs-toggle="pill" 
+                            data-bs-target="#car-pane-{{ car.id }}" 
+                            type="button">
+                        {{ car.name }} <span class="badge bg-white text-dark ms-1">{{ car.free }}/{{ car.total }} мест</span>
+                    </button>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="tab-content" id="carTabContent">
+            {% for car in carriages %}
+                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="car-pane-{{ car.id }}">
+
+                    <!-- 1. СХЕМА КУПЕЙНОГО ВАГОНА СО СПАЛЬНЫМИ МЕСТАМИ (КРОВАТИ) -->
+                    {% if car.category == 'coupe' %}
+                        <div class="p-4 bg-light rounded-4 border overflow-auto">
+                            <div class="text-center small text-muted mb-3 fw-bold">← НАПРАВЛЕНИЕ ДВИЖЕНИЯ ПОЕЗДА / КОРИДОР С ВИТРАЖНЫМИ ОКНАМИ →</div>
+                            <div class="d-flex gap-3" style="min-width: 820px;">
+                                {% for comp in car.compartments %}
+                                    <div class="border border-2 border-secondary-subtle rounded-3 p-2 bg-white flex-fill text-center shadow-sm d-flex flex-column">
+                                        <div class="badge bg-light text-secondary border mb-2">Купе №{{ comp.number }}</div>
+                                        
+                                        <!-- Верхние полки (жесткая привязка Flex) -->
+                                        <div class="d-flex gap-2 mb-2 flex-fill">
+                                            <div class="w-50 p-1 rounded-2 small fw-bold border d-flex flex-column justify-content-center align-items-center {% if comp.places[1].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}" title="Место {{ comp.places[1].number }} (Верхняя полка)">
+                                                <div class="text-nowrap"><i class="bi bi-arrow-up me-1"></i>{{ comp.places[1].number }}</div>
+                                                <div style="font-size: 0.65rem;">Верх</div>
+                                            </div>
+                                            <div class="w-50 p-1 rounded-2 small fw-bold border d-flex flex-column justify-content-center align-items-center {% if comp.places[3].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}" title="Место {{ comp.places[3].number }} (Верхняя полка)">
+                                                <div class="text-nowrap"><i class="bi bi-arrow-up me-1"></i>{{ comp.places[3].number }}</div>
+                                                <div style="font-size: 0.65rem;">Верх</div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-0 border-dashed text-muted w-100">
+
+                                        <!-- Нижние полки (жесткая привязка Flex) -->
+                                        <div class="d-flex gap-2 mt-2 flex-fill">
+                                            <div class="w-50 p-1 rounded-2 small fw-bold border d-flex flex-column justify-content-center align-items-center {% if comp.places[0].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}" title="Место {{ comp.places[0].number }} (Нижняя полка)">
+                                                <div class="text-nowrap"><i class="bi bi-arrow-down me-1"></i>{{ comp.places[0].number }}</div>
+                                                <div style="font-size: 0.65rem;">Низ</div>
+                                            </div>
+                                            <div class="w-50 p-1 rounded-2 small fw-bold border d-flex flex-column justify-content-center align-items-center {% if comp.places[2].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}" title="Место {{ comp.places[2].number }} (Нижняя полка)">
+                                                <div class="text-nowrap"><i class="bi bi-arrow-down me-1"></i>{{ comp.places[2].number }}</div>
+                                                <div style="font-size: 0.65rem;">Низ</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="text-center small text-muted mt-3">Коридор вагона с индивидуальными дверями купе</div>
+                        </div>
+
+                    <!-- 2. СХЕМА ПЛАЦКАРТНОГО ВАГОНА (ОТСЕКИ + БОКОВЫЕ ПОЛКИ) -->
+                    {% elif car.category == 'platzkart' %}
+                        <div class="p-4 bg-light rounded-4 border overflow-auto">
+                            <div class="text-center small text-muted mb-3 fw-bold">← ОТСЕКИ ОСНОВНЫХ СПАЛЬНЫХ ПОЛОК (1–36) →</div>
+                            <div class="d-flex gap-3 mb-3" style="min-width: 820px;">
+                                {% for comp in car.compartments %}
+                                    <div class="border border-2 border-secondary-subtle rounded-3 p-2 bg-white flex-fill text-center shadow-sm d-flex flex-column">
+                                        <div class="badge bg-light text-secondary border mb-2">Отсек {{ comp.number }}</div>
+                                        
+                                        <!-- Верхние полки отсека -->
+                                        <div class="d-flex gap-1 mb-1 flex-fill">
+                                            <div class="w-50 p-1 rounded-2 small fw-bold border d-flex justify-content-center align-items-center text-nowrap {% if comp.main_places[1].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}">
+                                                {{ comp.main_places[1].number }} В
+                                            </div>
+                                            <div class="w-50 p-1 rounded-2 small fw-bold border d-flex justify-content-center align-items-center text-nowrap {% if comp.main_places[3].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}">
+                                                {{ comp.main_places[3].number }} В
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Нижние полки отсека -->
+                                        <div class="d-flex gap-1 flex-fill">
+                                            <div class="w-50 p-1 rounded-2 small fw-bold border d-flex justify-content-center align-items-center text-nowrap {% if comp.main_places[0].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}">
+                                                {{ comp.main_places[0].number }} Н
+                                            </div>
+                                            <div class="w-50 p-1 rounded-2 small fw-bold border d-flex justify-content-center align-items-center text-nowrap {% if comp.main_places[2].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}">
+                                                {{ comp.main_places[2].number }} Н
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="bg-secondary-subtle text-center py-1 rounded small fw-bold text-secondary mb-3" style="min-width: 820px;">
+                                ПРОХОД ВАГОНА
+                            </div>
+
+                            <div class="text-center small text-muted mb-2 fw-bold">← БОКОВЫЕ СПАЛЬНЫЕ МЕСТА (37–54) →</div>
+                            <div class="d-flex gap-3" style="min-width: 820px;">
+                                {% for comp in car.compartments %}
+                                    <div class="border rounded-3 p-1 bg-white flex-fill text-center d-flex gap-1 shadow-sm">
+                                        <div class="w-50 p-1 rounded-2 small fw-bold border d-flex justify-content-center align-items-center text-nowrap {% if comp.side_places[0].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}">
+                                            {{ comp.side_places[0].number }} Б/Н
+                                        </div>
+                                        <div class="w-50 p-1 rounded-2 small fw-bold border d-flex justify-content-center align-items-center text-nowrap {% if comp.side_places[1].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}">
+                                            {{ comp.side_places[1].number }} Б/В
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    <!-- 3. СХЕМА СИДЯЧЕГО ВАГОНА («ЛАСТОЧКА») С КРЕСЛАМИ -->
+                    {% elif car.category == 'seating' %}
+                        <div class="p-4 bg-light rounded-4 border">
+                            <div class="text-center small text-muted mb-3 fw-bold">САЛОН СКОРОСТНОГО ПОЕЗДА: РЯДЫ КРЕСЕЛ У ОКНА И У ПРОХОДА</div>
+                            <div class="row g-2 justify-content-center">
+                                {% for seat in car.seats %}
+                                    <div class="col-2 col-md-1">
+                                        <div class="p-2 rounded-3 small fw-bold border text-center {% if seat.available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}" title="Место {{ seat.number }} ({{ seat.type }})">
+                                            <i class="bi bi-person-fill d-block" style="font-size: 0.8rem;"></i>
+                                            {{ seat.number }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- График остановок по станциям -->
+    <div class="card card-custom p-4 bg-white">
+        <h4 class="fw-bold mb-4"><i class="bi bi-signpost-split text-danger me-2"></i>График движения по станциям</h4>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>№</th><th>Станция</th><th class="text-center">Прибытие</th><th class="text-center">Стоянка</th><th class="text-center">Отправление</th></tr>
+                </thead>
+                <tbody>
+                    <tr class="table-primary fw-semibold">
+                        <td>1</td>
+                        <td><strong>{{ schedule.departure_station.city }}</strong> ({{ schedule.departure_station.name }}) <span class="badge bg-danger ms-2">Отправление</span></td>
+                        <td class="text-center text-muted">—</td>
+                        <td class="text-center text-muted">—</td>
+                        <td class="text-center text-dark fs-5 fw-bold">{{ schedule.departure_time.strftime('%H:%M') }}</td>
+                    </tr>
+                    {% for stop in stops %}
+                        <tr>
+                            <td>{{ loop.index + 1 }}</td>
+                            <td>{{ stop.station_name }}</td>
+                            <td class="text-center">{{ stop.arrival_time.strftime('%H:%M') if stop.arrival_time else '—' }}</td>
+                            <td class="text-center text-muted">{{ stop.stop_duration_minutes }} мин</td>
+                            <td class="text-center">{{ stop.departure_time.strftime('%H:%M') if stop.departure_time else '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                    <tr class="table-success fw-semibold">
+                        <td>{{ (stops|length) + 2 }}</td>
+                        <td><strong>{{ schedule.arrival_station.city }}</strong> ({{ schedule.arrival_station.name }}) <span class="badge bg-success ms-2">Прибытие</span></td>
+                        <td class="text-center text-dark fs-5 fw-bold">{{ schedule.arrival_time.strftime('%H:%M') }}</td>
+                        <td class="text-center text-muted">—</td>
+                        <td class="text-center text-muted">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-3 text-center">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary px-4 rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i> Вернуться назад
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

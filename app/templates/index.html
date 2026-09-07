@@ -1,0 +1,77 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="hero-banner shadow">
+    <div class="container">
+        <div class="row justify-content-center text-center mb-4">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold">Куда отправимся сегодня?</h1>
+                <p class="lead text-light opacity-75">Поиск поездов, проверка расписания и маршрутов в режиме реального времени</p>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card card-custom p-4 bg-white text-dark shadow-lg">
+                    <form action="/search" method="GET">
+                        <div class="row g-3 align-items-end mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-secondary"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Откуда</label>
+                                <select class="form-select form-select-lg" name="departure_id" required>
+                                    <option value="" disabled selected>Выберите станцию</option>
+                                    {% for station in stations %}
+                                        <option value="{{ station.id }}">{{ station.city }} ({{ station.name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-secondary"><i class="bi bi-pin-map-fill text-primary me-1"></i> Куда</label>
+                                <select class="form-select form-select-lg" name="arrival_id" required>
+                                    <option value="" disabled selected>Выберите станцию</option>
+                                    {% for station in stations %}
+                                        <option value="{{ station.id }}">{{ station.city }} ({{ station.name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-secondary"><i class="bi bi-calendar-event me-1"></i> Дата поездки</label>
+                                <input type="date" class="form-control form-select-lg" name="date" value="{{ tomorrow }}">
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark mb-1">
+                                        <i class="bi bi-funnel-fill text-danger me-1"></i>Категория поезда
+                                    </label>
+                                    <select name="train_type" class="form-select form-select-sm">
+                                        <option value="all">Все категории составов</option>
+                                        <option value="Ласточка">Скоростные («Ласточка»)</option>
+                                        <option value="фирменный">Фирменные экспрессы</option>
+                                        <option value="Пассажирский">Пассажирские поезда</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark mb-1">
+                                        <i class="bi bi-sort-down text-danger me-1"></i>Сортировка
+                                    </label>
+                                    <select name="sort_by" class="form-select form-select-sm">
+                                        <option value="time">По времени отправления (раньше)</option>
+                                        <option value="price">Сначала дешевые</option>
+                                        <option value="duration">Сначала самые быстрые в пути</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-center mt-3">
+                            <button type="submit" class="btn btn-danger btn-lg px-5 py-3 fw-bold rounded-pill shadow">
+                                <i class="bi bi-search me-2"></i> Найти поезда
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
