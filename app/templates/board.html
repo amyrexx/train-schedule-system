@@ -1,6 +1,27 @@
 ﻿{% extends "base.html" %}
 {% block title %}Онлайн-табло вокзалов — РЖД-Инфо{% endblock %}
 {% block content %}
+<style>
+    .board-tab-btn {
+        color: #212529 !important;
+        background-color: #ffffff;
+        border: 2px solid #dee2e6;
+        border-radius: 50rem;
+        padding: 0.5rem 1.6rem;
+        transition: all 0.2s ease;
+    }
+    .board-tab-btn:hover {
+        background-color: #f8f9fa;
+        color: #000000 !important;
+        border-color: #ced4da;
+    }
+    .board-tab-btn.active {
+        color: #ffffff !important;
+        background-color: #e21a1a !important;
+        border-color: #e21a1a !important;
+    }
+</style>
+
 <div class="container my-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
@@ -19,12 +40,17 @@
         </form>
     </div>
 
-    <ul class="nav nav-pills mb-3">
-        <li class="nav-item">
-            <button class="nav-link active fw-bold px-4 bg-danger" data-bs-toggle="pill" data-bs-target="#pills-departures">Отправление ({{ departures|length }})</button>
+    <!-- Вкладки табло: активная красная, неактивная с черным текстом без заливки -->
+    <ul class="nav nav-pills mb-4 gap-2" id="boardTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link board-tab-btn active fw-bold" data-bs-toggle="pill" data-bs-target="#pills-departures" type="button" role="tab">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Отправление ({{ departures|length }})
+            </button>
         </li>
-        <li class="nav-item">
-            <button class="nav-link fw-bold px-4 text-dark" data-bs-toggle="pill" data-bs-target="#pills-arrivals">Прибытие ({{ arrivals|length }})</button>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link board-tab-btn fw-bold" data-bs-toggle="pill" data-bs-target="#pills-arrivals" type="button" role="tab">
+                <i class="bi bi-box-arrow-in-down-left me-1"></i> Прибытие ({{ arrivals|length }})
+            </button>
         </li>
     </ul>
 

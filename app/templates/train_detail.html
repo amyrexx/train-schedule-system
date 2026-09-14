@@ -2,6 +2,37 @@
 {% block title %}Поезд {{ schedule.train.number }} — Справка о рейсе и схема вагонов{% endblock %}
 
 {% block content %}
+<style>
+    .carriage-tab-btn {
+        color: #212529 !important;
+        background-color: #ffffff;
+        border: 2px solid #dee2e6;
+        border-radius: 50rem;
+        padding: 0.5rem 1.6rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .carriage-tab-btn:hover {
+        background-color: #f8f9fa;
+        color: #000000 !important;
+        border-color: #ced4da;
+    }
+    .carriage-tab-btn.active {
+        color: #ffffff !important;
+        background-color: #e21a1a !important;
+        border-color: #e21a1a !important;
+    }
+    .carriage-tab-btn .badge-count {
+        background-color: #f1f3f5;
+        color: #495057;
+        transition: all 0.2s ease;
+    }
+    .carriage-tab-btn.active .badge-count {
+        background-color: #ffffff;
+        color: #e21a1a;
+    }
+</style>
+
 <div class="container my-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <nav aria-label="breadcrumb">
@@ -16,7 +47,7 @@
         </a>
     </div>
 
-    <!-- Общая карточка рейса -->
+    <!-- Карточка рейса -->
     <div class="card card-custom p-4 bg-white mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center">
             <div>
@@ -39,7 +70,7 @@
         </div>
     </div>
 
-    <!-- ИНФОРМАЦИОННЫЕ СХЕМЫ ВАГОНОВ -->
+    <!-- СХЕМА МЕСТ В ВАГОНАХ -->
     <div class="card card-custom p-4 bg-white mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
             <div>
@@ -53,19 +84,20 @@
         </div>
 
         <div class="alert alert-light border small text-muted mb-4 py-2">
-            <i class="bi bi-info-circle me-1 text-primary"></i> <strong>Справка:</strong> Выбор и резервирование мест через данный сервис не осуществляются. Схема приведена исключительно для ознакомления пассажиров с компоновкой состава.
+            <i class="bi bi-info-circle me-1 text-primary"></i> <strong>Справка:</strong> Выбор и резервирование мест через данный сервис не осуществляются. Схема приведена для ознакомления пассажиров с компоновкой состава.
         </div>
 
-        <!-- Вкладки выбора типа вагона -->
-        <ul class="nav nav-pills mb-4" id="carTab" role="tablist">
+        <!-- Переключатели вагонов -->
+        <ul class="nav nav-pills mb-4 gap-2" id="carTab" role="tablist">
             {% for car in carriages %}
-                <li class="nav-item me-2">
-                    <button class="nav-link {% if loop.first %}active bg-danger text-white{% else %}text-dark bg-light border{% endif %} fw-semibold rounded-pill px-4" 
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link carriage-tab-btn {% if loop.first %}active{% endif %}" 
                             id="tab-btn-{{ car.id }}" 
                             data-bs-toggle="pill" 
                             data-bs-target="#car-pane-{{ car.id }}" 
-                            type="button">
-                        {{ car.name }} <span class="badge bg-white text-dark ms-1">{{ car.free }}/{{ car.total }} мест</span>
+                            type="button" role="tab">
+                        {{ car.name }} 
+                        <span class="badge badge-count ms-2">{{ car.free }}/{{ car.total }} мест</span>
                     </button>
                 </li>
             {% endfor %}
@@ -75,7 +107,7 @@
             {% for car in carriages %}
                 <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="car-pane-{{ car.id }}">
 
-                    <!-- 1. СХЕМА КУПЕЙНОГО ВАГОНА СО СПАЛЬНЫМИ МЕСТАМИ (КРОВАТИ) -->
+                    <!-- КУПЕ -->
                     {% if car.category == 'coupe' %}
                         <div class="p-4 bg-light rounded-4 border overflow-auto">
                             <div class="text-center small text-muted mb-3 fw-bold">← НАПРАВЛЕНИЕ ДВИЖЕНИЯ ПОЕЗДА / КОРИДОР С ВИТРАЖНЫМИ ОКНАМИ →</div>
@@ -84,7 +116,7 @@
                                     <div class="border border-2 border-secondary-subtle rounded-3 p-2 bg-white flex-fill text-center shadow-sm d-flex flex-column">
                                         <div class="badge bg-light text-secondary border mb-2">Купе №{{ comp.number }}</div>
                                         
-                                        <!-- Верхние полки (жесткая привязка Flex) -->
+                                        <!-- Верхние полки -->
                                         <div class="d-flex gap-2 mb-2 flex-fill">
                                             <div class="w-50 p-1 rounded-2 small fw-bold border d-flex flex-column justify-content-center align-items-center {% if comp.places[1].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}" title="Место {{ comp.places[1].number }} (Верхняя полка)">
                                                 <div class="text-nowrap"><i class="bi bi-arrow-up me-1"></i>{{ comp.places[1].number }}</div>
@@ -98,7 +130,7 @@
 
                                         <hr class="my-0 border-dashed text-muted w-100">
 
-                                        <!-- Нижние полки (жесткая привязка Flex) -->
+                                        <!-- Нижние полки -->
                                         <div class="d-flex gap-2 mt-2 flex-fill">
                                             <div class="w-50 p-1 rounded-2 small fw-bold border d-flex flex-column justify-content-center align-items-center {% if comp.places[0].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}" title="Место {{ comp.places[0].number }} (Нижняя полка)">
                                                 <div class="text-nowrap"><i class="bi bi-arrow-down me-1"></i>{{ comp.places[0].number }}</div>
@@ -115,7 +147,7 @@
                             <div class="text-center small text-muted mt-3">Коридор вагона с индивидуальными дверями купе</div>
                         </div>
 
-                    <!-- 2. СХЕМА ПЛАЦКАРТНОГО ВАГОНА (ОТСЕКИ + БОКОВЫЕ ПОЛКИ) -->
+                    <!-- ПЛАЦКАРТ -->
                     {% elif car.category == 'platzkart' %}
                         <div class="p-4 bg-light rounded-4 border overflow-auto">
                             <div class="text-center small text-muted mb-3 fw-bold">← ОТСЕКИ ОСНОВНЫХ СПАЛЬНЫХ ПОЛОК (1–36) →</div>
@@ -124,7 +156,6 @@
                                     <div class="border border-2 border-secondary-subtle rounded-3 p-2 bg-white flex-fill text-center shadow-sm d-flex flex-column">
                                         <div class="badge bg-light text-secondary border mb-2">Отсек {{ comp.number }}</div>
                                         
-                                        <!-- Верхние полки отсека -->
                                         <div class="d-flex gap-1 mb-1 flex-fill">
                                             <div class="w-50 p-1 rounded-2 small fw-bold border d-flex justify-content-center align-items-center text-nowrap {% if comp.main_places[1].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}">
                                                 {{ comp.main_places[1].number }} В
@@ -134,7 +165,6 @@
                                             </div>
                                         </div>
                                         
-                                        <!-- Нижние полки отсека -->
                                         <div class="d-flex gap-1 flex-fill">
                                             <div class="w-50 p-1 rounded-2 small fw-bold border d-flex justify-content-center align-items-center text-nowrap {% if comp.main_places[0].available %}bg-success text-white border-success{% else %}bg-secondary text-white opacity-50 border-secondary{% endif %}">
                                                 {{ comp.main_places[0].number }} Н
@@ -166,7 +196,7 @@
                             </div>
                         </div>
 
-                    <!-- 3. СХЕМА СИДЯЧЕГО ВАГОНА («ЛАСТОЧКА») С КРЕСЛАМИ -->
+                    <!-- ЛАСТОЧКА -->
                     {% elif car.category == 'seating' %}
                         <div class="p-4 bg-light rounded-4 border">
                             <div class="text-center small text-muted mb-3 fw-bold">САЛОН СКОРОСТНОГО ПОЕЗДА: РЯДЫ КРЕСЕЛ У ОКНА И У ПРОХОДА</div>
@@ -188,7 +218,7 @@
         </div>
     </div>
 
-    <!-- График остановок по станциям -->
+    <!-- График остановок -->
     <div class="card card-custom p-4 bg-white">
         <h4 class="fw-bold mb-4"><i class="bi bi-signpost-split text-danger me-2"></i>График движения по станциям</h4>
         <div class="table-responsive">

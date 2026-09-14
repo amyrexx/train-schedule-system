@@ -41,13 +41,9 @@ def shift_schedule_dates(sch, target_date=None):
     return sch, duration
 
 def generate_train_carriages(schedule_id, train_type):
-    """
-    Генерирует индивидуальные схемы вагонов и занятость мест в зависимости от категории поезда.
-    """
     rng = random.Random(str(schedule_id))
     carriages = []
 
-    # 1. Схема для скоростных поездов «Ласточка» (Сидячие вагоны)
     if 'Ласточка' in train_type:
         seats = []
         for i in range(1, 69):
@@ -65,10 +61,7 @@ def generate_train_carriages(schedule_id, train_type):
             "free": sum(1 for s in seats if s["available"]),
             "total": len(seats)
         })
-
-    # 2. Схема для спальных поездов (Купе и Плацкарт с кроватями)
     else:
-        # Вагон Купе: 9 купе по 4 полки (1-36). Нечетные - нижние, четные - верхние
         coupe_compartments = []
         for comp_idx in range(9):
             start = comp_idx * 4 + 1
@@ -93,18 +86,15 @@ def generate_train_carriages(schedule_id, train_type):
             "total": len(coupe_all)
         })
 
-        # Вагон Плацкарт: 9 отсеков (1-36) + боковые места (37-54)
         platz_compartments = []
         for comp_idx in range(9):
             start = comp_idx * 4 + 1
-            # Основной отсек (4 полки)
             main_places = [
                 {"number": start, "type": "Нижняя полка", "available": rng.random() > 0.4},
                 {"number": start + 1, "type": "Верхняя полка", "available": rng.random() > 0.3},
                 {"number": start + 2, "type": "Нижняя полка", "available": rng.random() > 0.45},
                 {"number": start + 3, "type": "Верхняя полка", "available": rng.random() > 0.35}
             ]
-            # Боковой отсек (2 полки напротив)
             side_num = 54 - (comp_idx * 2)
             side_places = [
                 {"number": side_num - 1, "type": "Боковая нижняя", "available": rng.random() > 0.4},
@@ -240,39 +230,53 @@ def export_ics(schedule_id):
     
     sch = doc.to_dict()
     sch, _ = shift_schedule_dates(sch)
-    dep_time = sch['departure_time']
-    arr_time = sch['arrival_time']
-    train_num = sch.get('train', {}).get('number', '000')
-    train_name = sch.get('train', {}).get('name', '')
-    dep_st = sch.get('departure_station', {}).get('name', 'Вокзал отправления')
-    arr_st = sch.get('arrival_station', {}).get('name', 'Вокзал прибытия')
+    dep_time = sch.get('departure_time')
+    arr_time = sch.get('arrival_time')
 
-    dt_start = dep_time.strftime('%Y%m%dT%H%M%S')
-    dt_end = arr_time.strftime('%Y%m%dT%H%M%S')
+    train_info = sch.get('train') or {}
+    dep_station_info = sch.get('departure_station') or {}
+    arr_station_info = sch.get('arrival_station') or {}
+
+    train_num = train_info.get('number', '000')
+    train_name = train_info.get('name', '')
+    dep_st = dep_station_info.get('name', 'Вокзал отправления')
+    arr_st = arr_station_info.get('name', 'Вокзал прибытия')
+    platform = sch.get('platform', '1')
+    status = sch.get('status', 'По расписанию')
+
+    dt_start = dep_time.strftime('%Y%m%dT%H%M%S') if dep_time else ''
+    dt_end = arr_time.strftime('%Y%m%dT%H%M%S') if arr_time else ''
     dt_now = datetime.now().strftime('%Y%m%dT%H%M%SZ')
 
-    ics_content = f"""BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//RZD-Info//Train Schedule System//RU
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-BEGIN:VEVENT
-UID:train-{schedule_id}-{dt_start}@rzd-info.ru
-DTSTAMP:{dt_now}
-DTSTART:{dt_start}
-DTEND:{dt_end}
-SUMMARY:Поезд {train_num} ({train_name}): {dep_st} - {arr_st}
-DESCRIPTION:Справочная информация о рейсе. Платформа {sch.get('platform', '1')}. Статус: {sch.get('status', 'По расписанию')}.
-LOCATION:{dep_st}
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR"""
+    ics_lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//RZD-Info//Train Schedule System//RU",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "BEGIN:VEVENT",
+        f"UID:train-{schedule_id}-{dt_start}@rzd-info.ru",
+        f"DTSTAMP:{dt_now}",
+        f"DTSTART:{dt_start}",
+        f"DTEND:{dt_end}",
+        f"SUMMARY:Поезд {train_num} ({train_name}): {dep_st} - {arr_st}",
+        f"DESCRIPTION:Справочная информация о рейсе. Платформа {platform}. Статус: {status}.",
+        f"LOCATION:{dep_st}",
+        "STATUS:CONFIRMED",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ]
+    ics_content = "\r\n".join(ics_lines)
 
-    return Response(
-        ics_content,
-        mimetype="text/calendar",
-        headers={"Content-Disposition": f"attachment; filename=train_{train_num}.ics"}
+    # Имя файла только в ASCII для предотвращения падения WSGI/Gunicorn с UnicodeEncodeError (502 Bad Gateway)
+    safe_filename = f"train_schedule_{schedule_id[:8]}.ics"
+
+    response = Response(
+        ics_content.encode('utf-8'),
+        mimetype="text/calendar; charset=utf-8"
     )
+    response.headers["Content-Disposition"] = f'attachment; filename="{safe_filename}"'
+    return response
 
 @main_bp.route('/board')
 def board():
